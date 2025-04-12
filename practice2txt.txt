@@ -1,0 +1,641 @@
+HomeController.cs
+
+using Microsoft.AspNetCore.Mvc;
+using Vector.Models;
+using Vector.Repository;
+
+namespace Vector.Controllers
+{
+    public class HomeController : Controller
+    {
+        // Implement code here
+        
+        // GET: Home/Index
+        public ActionResult Index()
+        {
+            return View();
+        }
+        
+    }
+}
+
+
+
+VectorController.cs
+
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Vector.Data;
+using Vector.Models;
+using Vector.Repository;
+
+namespace Vector.Controllers
+{
+    public class VectorController : Controller
+    {
+        private readonly VectorRepository _repository;
+        private readonly VectorDBContext _context;
+
+        // Parameterized constructor
+        public VectorController(VectorDBContext context)
+        {
+            _context = context;
+            _repository = new VectorRepository(context);
+        }
+
+        // GET: Vector/DivisionsList
+        public ActionResult DivisionsList()
+        {
+            var divisions = _context.Divisions.ToList();
+            return View(divisions);
+        }
+
+        // GET: Vector/AgentsList
+        public ActionResult AgentsList()
+        {
+            var agents = _context.Agents.Include(a => a.Division).ToList();
+            return View(agents);
+        }
+
+        // GET: Vector/StipendsList
+        public ActionResult StipendsList()
+        {
+            var stipends = _context.Stipends.Include(s => s.Agent).ToList();
+            return View(stipends);
+        }
+
+        // GET: Vector/CreateDivision
+        [HttpGet]
+        public ActionResult CreateDivision()
+        {
+            return View();
+        }
+
+        // POST: Vector/CreateDivision
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateDivision(Division division)
+        {
+            if (ModelState.IsValid)
+            {
+                if (_repository.AddDivision(division))
+                {
+                    ViewBag.Message = "Division Details Added Successfully";
+                }
+                else
+                {
+                    ViewBag.Message = "Error adding division details.";
+                }
+            }
+            return View(division);
+        }
+
+        // GET: Vector/CreateAgent
+        [HttpGet]
+        public ActionResult CreateAgent()
+        {
+            ViewBag.Divisions = new SelectList(_context.Divisions, "Id", "Place");
+            return View();
+        }
+
+        // POST: Vector/CreateAgent
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateAgent(Agent agent)
+        {
+            if (ModelState.IsValid)
+            {
+                if (_repository.AddAgent(agent))
+                {
+                    ViewBag.Message = "Agent Details Added Successfully";
+                }
+                else
+                {
+                    ViewBag.Message = "Error adding agent details.";
+                }
+            }
+            ViewBag.Divisions = new SelectList(_context.Divisions, "Id", "Place", agent.DivisionId);
+            return View(agent);
+        }
+
+        // GET: Vector/CreateStipend
+        [HttpGet]
+        public ActionResult CreateStipend()
+        {
+            ViewBag.Agents = new SelectList(_context.Agents, "Id", "Name");
+            return View();
+        }
+
+        // POST: Vector/CreateStipend
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateStipend(Stipend stipend)
+        {
+            if (ModelState.IsValid)
+            {
+                if (_repository.AddStipend(stipend))
+                {
+                    ViewBag.Message = "Stipend Details Added Successfully";
+                }
+                else
+                {
+                    ViewBag.Message = "Error adding stipend details.";
+                }
+            }
+            ViewBag.Agents = new SelectList(_context.Agents, "Id", "Name", stipend.AgentId);
+            return View(stipend);
+        }
+    }
+}
+
+
+
+VectorDbContext.cs
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Vector.Models;
+
+namespace Vector.Data
+{
+    public class VectorDBContext : DbContext
+    {
+        public VectorDBContext(DbContextOptions<VectorDBContext> options) : base(options)
+        {
+            
+
+        }
+
+        // Implement code here
+        public DbSet<Agent> Agents {get; set;}
+            
+        public DbSet<Division> Divisions {get; set;}
+        
+        public DbSet<Stipend> Stipends {get; set;}
+        
+         
+        //DO NOT MAKE ANY CHANGES IN THIS BELOW-MENTIONED METHOD
+        //Please un-comment the below-given code before submitting/evaluating
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Agent>()
+            .HasOne(p => p.Division)
+            .WithMany()
+            .HasForeignKey(p => p.DivisionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Stipend>()
+                .HasOne(p => p.Agent)
+                .WithMany()
+                .HasForeignKey(p => p.AgentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+    }
+}
+
+
+
+Agent.cs
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Vector.Models
+{
+    public class Agent
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "Please provide name")]
+        public string Name { get; set; }
+
+        [Display(Name = "Division")]
+        [Required(ErrorMessage = "Please select a division")]
+        public int DivisionId { get; set; }
+
+        [ForeignKey("DivisionId")]
+        [NotMapped]
+        public Division? Division { get; set; }
+
+        [NotMapped]
+        public SelectList? Divisions { get; set; }
+
+        [Required(ErrorMessage = "Please provide contact")]
+        public string Contact { get; set; }
+
+        [Required(ErrorMessage = "Please provide date of join")]
+        public string DateOfJoin { get; set; }
+    }
+}
+
+
+
+
+Division.cs
+
+using System.ComponentModel.DataAnnotations;
+
+namespace Vector.Models
+{
+    public class Division
+    {
+        // Implement code here
+        [Key]
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "Please provide place")]
+        public string Place { get; set; }
+
+        [Required(ErrorMessage = "Please provide description")]
+        public string Description { get; set; }
+    }
+}
+
+
+
+Stipend.cs
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Vector.Models
+{
+    public class Stipend
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Display(Name = "Agent")]
+        [Required(ErrorMessage = "Please select an agent")]
+        public int AgentId { get; set; }
+
+        [ForeignKey("AgentId")]
+        [NotMapped]
+        public Agent? Agent { get; set; }
+
+        [NotMapped]
+        public SelectList? Agents { get; set; }
+
+        [Required(ErrorMessage = "Please provide month of stipend")]
+        public string MonthOfStipend { get; set; }
+
+        [Required(ErrorMessage = "Please provide amount of salary")]
+        public double AmountOfSalary { get; set; }
+    }
+}
+
+
+
+Program.cs
+
+builder.Services.AddDbContext<VectorDBContext>(options => options.UseSqlServer(
+    builder.Configuration.GetConnectionString("DBConnection")
+    ));
+
+
+
+VectorRepository.cs
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Vector.Data;
+using Vector.Models;
+
+namespace Vector.Repository
+{
+    public class VectorRepository
+    {
+        private readonly VectorDBContext _context;
+
+        public VectorRepository(VectorDBContext context)
+        {
+            _context = context;
+        }
+
+        public bool AddDivision(Division division)
+        {
+            try
+            {
+                _context.Divisions.Add(division);
+                _context.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool AddAgent(Agent agent)
+        {
+            try
+            {
+                _context.Agents.Add(agent);
+                _context.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool AddStipend(Stipend stipend)
+        {
+            try
+            {
+                _context.Stipends.Add(stipend);
+                _context.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+}
+
+
+
+
+Index.cshtml
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+<a id="lnkDivisions" href="@Url.Action("DivisionsList", "Vector")">Divisions List</a>
+<a id="lnkAgents" href="@Url.Action("AgentsList", "Vector")">Agents List</a>
+<a id="lnkStipends" href="@Url.Action("StipendsList", "Vector")">Stipends List</a>
+
+Error.cshtml
+
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1 class="text-danger">Error.</h1>
+<h2 class="text-danger">An error occurred while processing your request.</h2>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+<h3>Development Mode</h3>
+<p>
+    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
+</p>
+<p>
+    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
+    It can result in displaying sensitive information from exceptions to end users.
+    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
+    and restarting the app.
+</p>
+
+
+
+
+_Layout.cshtml
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Vector</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Vector.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Vector</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2024 - Vector - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+AgentsList.cshtml
+
+@model IEnumerable<Vector.Models.Agent>
+
+@{
+    ViewData["Title"] = "Agents List";
+}
+
+<h1>Agents List</h1>
+
+<table id="tblAgents" class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Division</th>
+            <th>Contact</th>
+            <th>Date Of Join</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Division?.Place</td>
+                <td>@item.Contact</td>
+                <td>@item.DateOfJoin</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("CreateAgent", "Vector")" class="btn btn-primary">Create New Agent</a>
+
+
+CreateAgent.cshtml
+
+@model Vector.Models.Agent
+
+@{
+    ViewData["Title"] = "Create Agent";
+}
+
+<h1>Create Agent</h1>
+<h2 id="Message">@ViewBag.Message</h2>
+
+<form asp-action="CreateAgent" method="post">
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" id="Name" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="DivisionId"></label>
+        <select asp-for="DivisionId" class="form-control" asp-items="ViewBag.Divisions"></select>
+        <span asp-validation-for="DivisionId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Contact"></label>
+        <input asp-for="Contact" class="form-control" />
+        <span asp-validation-for="Contact" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="DateOfJoin"></label>
+        <input asp-for="DateOfJoin" class="form-control" />
+        <span asp-validation-for="DateOfJoin" class="text-danger"></span>
+    </div>
+    <button type="submit" id="btnCrAgent" class="btn btn-primary">Create</button>
+</form>
+
+
+CreateDivision.cshtml
+
+@model Vector.Models.Division
+
+@{
+    ViewData["Title"] = "Create Division";
+}
+
+<h1>Create Division</h1>
+<h2 id="Message">@ViewBag.Message</h2>
+
+<form asp-action="CreateDivision" method="post">
+    <div class="form-group">
+        <label asp-for="Place"></label>
+        <input asp-for="Place" class="form-control" />
+        <span asp-validation-for="Place" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        <input asp-for="Description" class="form-control" />
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+    <button type="submit" id="btnCrDivision" class="btn btn-primary">Create</button>
+</form>
+
+
+
+CreateStipend.cshtml
+
+@model Vector.Models.Stipend
+
+@{
+    ViewData["Title"] = "Create Stipend";
+}
+
+<h1>Create Stipend</h1>
+<h2 id="Message">@ViewBag.Message</h2>
+
+<form asp-action="CreateStipend" method="post">
+    <div class="form-group">
+        <label asp-for="AgentId"></label>
+        <select asp-for="AgentId" class="form-control" asp-items="ViewBag.Agents"></select>
+        <span asp-validation-for="AgentId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="MonthOfStipend"></label>
+        <input asp-for="MonthOfStipend" class="form-control" />
+        <span asp-validation-for="MonthOfStipend" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="AmountOfSalary"></label>
+        <input asp-for="AmountOfSalary" class="form-control" />
+        <span asp-validation-for="AmountOfSalary" class="text-danger"></span>
+    </div>
+    <button type="submit" id="btnCrStipend" class="btn btn-primary">Create</button>
+</form>
+
+DivisionsList.cshtml
+
+@model IEnumerable<Vector.Models.Division>
+
+@{
+    ViewData["Title"] = "Divisions List";
+}
+
+<h1>Divisions List</h1>
+
+<table id="tblDivisions" class="table">
+    <thead>
+        <tr>
+            <th>Place</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Place</td>
+                <td>@item.Description</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("CreateDivision", "Vector")" class="btn btn-primary">Create New Division</a>
+
+
+
+StipendsList.cshtml
+
+@model IEnumerable<Vector.Models.Stipend>
+
+@{
+    ViewData["Title"] = "Stipends List";
+}
+
+<h1>Stipends List</h1>
+
+<table id="tblStipends" class="table">
+    <thead>
+        <tr>
+            <th>Agent</th>
+            <th>Month Of Stipend</th>
+            <th>Amount Of Salary</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Agent?.Name</td>
+                <td>@item.MonthOfStipend</td>
+                <td>@item.AmountOfSalary</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("CreateStipend", "Vector")" class="btn btn-primary">Create New Stipend</a>
