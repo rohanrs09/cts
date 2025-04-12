@@ -1,0 +1,927 @@
+LibraryController.cs
+
+using LibraryManagementSystem.Data;
+using LibraryManagementSystem.Models;
+using Microsoft.AspNetCore.Mvc;
+
+namespace LibraryManagementSystem.Controllers
+{
+    public class LibraryController : Controller
+    {
+        private readonly DatabaseContext _databaseContext;
+
+        public LibraryController(DatabaseContext databaseContext)
+        {
+            _databaseContext = databaseContext;
+        }
+
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Create(BranchDetails branchDetails)
+        {
+            if (ModelState.IsValid)
+            {
+                _databaseContext.BranchesDetails.Add(branchDetails);
+                _databaseContext.SaveChanges();
+                ViewBag.Message = "Branch Details Added Successfully";
+                return View();
+            }
+            return View(branchDetails);
+        }
+
+        [HttpGet]
+        public IActionResult GetBranchDetails()
+        {
+            var branches = _databaseContext.BranchesDetails.ToList();
+            return View(branches);
+        }
+
+        [HttpGet]
+        public IActionResult CreateBooksDetails()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult CreateBooksDetails(BookDetails bookDetails)
+        {
+            if (ModelState.IsValid)
+            {
+                _databaseContext.BooksDetails.Add(bookDetails);
+                _databaseContext.SaveChanges();
+                ViewBag.Message = "Book Details Added Successfully";
+                return View();
+            }
+            return View(bookDetails);
+        }
+
+        [HttpGet]
+        public IActionResult GetBookDetails()
+        {
+            var books = _databaseContext.BooksDetails.ToList();
+            return View(books);
+        }
+
+        [HttpGet]
+        public IActionResult CreateLibrarian()
+        {
+            return View();
+        }
+
+              [HttpPost]
+        public IActionResult CreateLibrarian(Librarian librarian)
+        {
+            if (ModelState.IsValid)
+            {
+                _databaseContext.LibrarianDetails.Add(librarian);
+                _databaseContext.SaveChanges();
+                ViewBag.Message = "Librarian Details Added Successfully";
+                return View();
+            }
+            return View(librarian);
+        }
+
+        [HttpGet]
+        public IActionResult GetLibrarianDetails()
+        {
+            var librarians = _databaseContext.LibrarianDetails.ToList();
+            return View(librarians);
+        }
+
+        [HttpGet]
+        public IActionResult CreateMembership()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult CreateMembership(Members members)
+        {
+            if (ModelState.IsValid)
+            {
+                _databaseContext.MembersDetails.Add(members);
+                _databaseContext.SaveChanges();
+                ViewBag.Message = "Member Details Added Successfully";
+                return View();
+            }
+            return View(members);
+        }
+
+        [HttpGet]
+        public IActionResult GetMembershipDetails()
+        {
+            var members = _databaseContext.MembersDetails.ToList();
+            return View(members);
+        }
+    }
+}
+
+
+DatabaseContext.cs
+
+using LibraryManagementSystem.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.Metrics;
+
+namespace LibraryManagementSystem.Data
+{
+    public class DatabaseContext : DbContext
+    {
+
+       public DbSet<BranchDetails> BranchesDetails { get; set; }
+        public DbSet<BookDetails> BooksDetails { get; set; }
+        public DbSet<Librarian> LibrarianDetails { get; set; }
+        public DbSet<Members> MembersDetails { get; set; }
+        public DatabaseContext(DbContextOptions<DatabaseContext> option) : base(option)
+        {
+
+        }
+
+        // Implement code here
+
+        //DO NOT MAKE ANY CHANGES IN THIS BELOW-MENTIONED METHOD
+        //Please un-comment the below-given code before submitting/evaluating
+        // protected override void OnModelCreating(ModelBuilder modelBuilder)
+        // {
+
+        //     modelBuilder.Entity<BranchDetails>().HasKey(k => k.BranchId);
+        //     modelBuilder.Entity<BookDetails>().HasKey(k => k.Id);
+        //     modelBuilder.Entity<Librarian>().HasKey(k => k.Id);
+        //     modelBuilder.Entity<Members>().HasKey(k => k.Id);
+
+
+
+        //     modelBuilder.Entity<BookDetails>()
+        //   .HasOne(b => b.Branch)
+        //   .WithMany()
+        //   .HasForeignKey(b => b.BranchId);
+
+        //     modelBuilder.Entity<Librarian>()
+        //   .HasOne(b => b.Branch)
+        //   .WithMany()
+        //   .HasForeignKey(b => b.BranchId);
+
+        //     modelBuilder.Entity<Members>()
+        //   .HasOne(b => b.Branch)
+        //   .WithMany()
+        //   .HasForeignKey(b => b.BranchId);
+
+        // }
+    }
+}
+
+BookDetails.cs
+
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel;
+
+namespace LibraryManagementSystem.Models
+{
+    public class BookDetails
+    {
+        // Implement code here
+        [Key]
+        public int Id { get; set; }
+        [Required(ErrorMessage = "Please enter the Title")]
+        public string Title { get; set; }
+        [Required(ErrorMessage = "Please enter the Author")]
+        public string Author { get; set; }
+        [Required(ErrorMessage = "Please enter the Genre")]
+        public string Genre { get; set; }
+        [Required(ErrorMessage = "Please enter the TotalCopies")]
+        public int TotalCopies { get; set; }
+        [Required(ErrorMessage = "Please enter the AvailableCopies")]
+        public int AvailableCopies { get; set; }
+        [ForeignKey("Branch")]
+        public int BranchId { get; set; }
+
+        [NotMapped]
+        public BranchDetails? Branch { get; set; }
+
+        [NotMapped]
+        public SelectList? Branches { get; set; }
+    }
+}
+
+BranchDetails.cs
+
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
+
+namespace LibraryManagementSystem.Models
+{
+    public class BranchDetails
+    {
+        // Implement code here
+
+        [Key]
+        public int BranchId { get; set; }
+        [Required(ErrorMessage = "Please enter the BranchName")]
+        public string BranchName { get; set; }
+        [Required(ErrorMessage = "Please enter the BranchLocation")]
+        public string BranchLocation { get; set; }
+        [Required(ErrorMessage = "Please enter the City")]
+        public string City { get; set; }
+    }
+}
+
+Librarian.cs
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace LibraryManagementSystem.Models
+{
+    public class Librarian
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "Please enter the Name")]
+        public string Name { get; set; }
+
+        [Required(ErrorMessage = "Please enter the Gender")]
+        public string Gender { get; set; }
+
+        [Required(ErrorMessage = "Please enter the Experience")]
+        public int Experience { get; set; }
+
+        [Required(ErrorMessage = "Please enter the Contact")]
+        public string Contact { get; set; }
+
+        [Required(ErrorMessage = "Please enter the BranchId")]
+        public int BranchId { get; set; }
+
+        [ForeignKey("BranchId")]
+        public BranchDetails? Branch { get; set; }
+
+        [NotMapped]
+        public SelectList? Branches { get; set; }
+    }
+}
+
+Members.cs
+
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace LibraryManagementSystem.Models
+{
+    public class Members
+    {
+        // Implement code here
+        [Key]
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "Please enter the Name")]
+        public string Name { get; set; }
+
+        [Required(ErrorMessage = "Please enter the Gender")]
+        public string Gender { get; set; }
+
+        [Required(ErrorMessage = "Please enter the Contact")]
+        public string Contact { get; set; }
+
+        [Required(ErrorMessage = "Please enter the BranchId")]
+        public int BranchId { get; set; }
+
+        [ForeignKey(nameof(BranchId))]
+        public BranchDetails? Branch { get; set; }
+
+
+        [NotMapped]
+        public SelectList? Branches { get; set; }
+    }
+}
+
+Program.cs
+
+builder.Services.AddTransient<LibraryController>();
+builder.Services.AddDbContext<DatabaseContext>(Option => Option.UseSqlServer
+        (builder.Configuration.GetConnectionString("DBConnection")));
+
+Index.cshtml
+
+@model LibraryManagementSystem.Models.BranchDetails
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    <a id="lnkCrBranch" asp-controller="Library" asp-action="Create">Create Branch</a>
+</p>
+<p>
+    <a id="lnkGetBranch" asp-controller="Library" asp-action="GetBranchDetails">Get Branch Details</a>
+</p>
+<p>
+    <a id="lnkCrBook" asp-controller="Library" asp-action="CreateBooksDetails">Create Book Details</a>
+</p>
+<p>
+    <a id="lnkGetBook" asp-controller="Library" asp-action="GetBookDetails">Get Book Details</a>
+</p>
+<p>
+    <a id="lnkCrLibrarian" asp-controller="Library" asp-action="CreateLibrarian">Create Librarian</a>
+</p>
+<p>
+    <a id="lnkGetLibrarian" asp-controller="Library" asp-action="GetLibrarianDetails">Get Librarian Details</a>
+</p>
+<p>
+    <a id="lnkCrMember" asp-controller="Library" asp-action="CreateMembership">Create Membership</a>
+</p>
+<p>
+    <a id="lnkGetMember" asp-controller="Library" asp-action="GetMembershipDetails">Get Membership Details</a>
+</p>
+
+Create.cshtml
+
+@model LibraryManagementSystem.Models.BranchDetails
+
+@{
+    ViewBag.Title = "Create Branch";
+}
+
+<h2>Create Branch</h2>
+
+@using (Html.BeginForm("Create", "Library", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        <h4>BranchDetails</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.BranchName, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.BranchName, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.BranchName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.BranchLocation, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.BranchLocation, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.BranchLocation, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.City, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.City, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.City, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Create" class="btn btn-default" id="BranchCreationBtn" />
+            </div>
+        </div>
+    </div>
+}
+
+<h2 id="Message">@ViewBag.Message</h2>
+
+CreateBooksDetails.cshtml
+
+@model LibraryManagementSystem.Models.BookDetails
+@{
+   ViewBag.Title = "Create Book Details";
+}
+<h2>Create Book Details</h2>
+@using (Html.BeginForm("CreateBooksDetails", "Library", FormMethod.Post))
+{
+   @Html.AntiForgeryToken()
+<div class="form-horizontal">
+<h4>Book Details</h4>
+<hr />
+       @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+<div class="form-group">
+           @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+               @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control" } })
+               @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+</div>
+</div>
+<div class="form-group">
+           @Html.LabelFor(model => model.Author, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+               @Html.EditorFor(model => model.Author, new { htmlAttributes = new { @class = "form-control" } })
+               @Html.ValidationMessageFor(model => model.Author, "", new { @class = "text-danger" })
+</div>
+</div>
+<div class="form-group">
+           @Html.LabelFor(model => model.Genre, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+               @Html.EditorFor(model => model.Genre, new { htmlAttributes = new { @class = "form-control" } })
+               @Html.ValidationMessageFor(model => model.Genre, "", new { @class = "text-danger" })
+</div>
+</div>
+<div class="form-group">
+           @Html.LabelFor(model => model.TotalCopies, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+               @Html.EditorFor(model => model.TotalCopies, new { htmlAttributes = new { @class = "form-control" } })
+               @Html.ValidationMessageFor(model => model.TotalCopies, "", new { @class = "text-danger" })
+</div>
+</div>
+<div class="form-group">
+           @Html.LabelFor(model => model.AvailableCopies, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+               @Html.EditorFor(model => model.AvailableCopies, new { htmlAttributes = new { @class = "form-control" } })
+               @Html.ValidationMessageFor(model => model.AvailableCopies, "", new { @class = "text-danger" })
+</div>
+</div>
+<div class="form-group">
+           @Html.LabelFor(model => model.BranchId, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+               @Html.DropDownListFor(model => model.BranchId, new SelectList(new List<SelectListItem>
+               {
+                   new SelectListItem { Text = "Main Branch", Value = "1" },
+                   new SelectListItem { Text = "Downtown Branch", Value = "2" }
+               }, "Value", "Text"), "-- Select Any Option --", new { @class = "form-control" })
+               @Html.ValidationMessageFor(model => model.BranchId, "", new { @class = "text-danger" })
+</div>
+</div>
+<div class="form-group">
+<div class="col-md-offset-2 col-md-10">
+<input type="submit" value="Create" class="btn btn-primary" id="BookCreationBtn" />
+</div>
+</div>
+</div>
+}
+<h2 id="Message">@ViewBag.Message</h2>
+
+CreateLibrarian.cshtml
+
+
+
+@model LibraryManagementSystem.Models.Librarian
+ 
+@{
+   ViewBag.Title = "Create Librarian";
+}
+<h2>Create Librarian</h2>
+@using (Html.BeginForm("Create", "Librarian", FormMethod.Post))
+{
+   @Html.AntiForgeryToken()
+<div class="form-horizontal">
+<h4>Librarian</h4>
+<hr />
+       @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+<div class="form-group">
+           @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+               @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control" } })
+               @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+</div>
+</div>
+<div class="form-group">
+           @Html.LabelFor(model => model.Gender, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+               @Html.DropDownListFor(model => model.Gender, new SelectList(new[]
+               {
+                   new { Value = "Male", Text = "Male" },
+                   new { Value = "Female", Text = "Female" }
+               }, "Value", "Text"), "-- Select Gender --", new { @class = "form-control" })
+               @Html.ValidationMessageFor(model => model.Gender, "", new { @class = "text-danger" })
+</div>
+</div>
+<div class="form-group">
+           @Html.LabelFor(model => model.Experience, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+               @Html.EditorFor(model => model.Experience, new { htmlAttributes = new { @class = "form-control" } })
+               @Html.ValidationMessageFor(model => model.Experience, "", new { @class = "text-danger" })
+</div>
+</div>
+<div class="form-group">
+           @Html.LabelFor(model => model.Contact, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+               @Html.EditorFor(model => model.Contact, new { htmlAttributes = new { @class = "form-control" } })
+               @Html.ValidationMessageFor(model => model.Contact, "", new { @class = "text-danger" })
+</div>
+</div>
+<div class="form-group">
+           @Html.LabelFor(model => model.BranchId, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+               @Html.DropDownListFor(model => model.BranchId, ViewBag.Branches as SelectList, "-- Select Any Option --", new { @class = "form-control" })
+               @Html.ValidationMessageFor(model => model.BranchId, "", new { @class = "text-danger" })
+</div>
+</div>
+<div class="form-group">
+<div class="col-md-offset-2 col-md-10">
+<input type="submit" value="Create" class="btn btn-primary" />
+               @Html.ActionLink("Back to List", "Index", null, new { @class = "btn btn-secondary" })
+</div>
+</div>
+</div>
+}
+
+CreateMembership.cshtml
+
+@model LibraryManagementSystem.Models.Members
+ 
+@{
+
+    ViewBag.Title = "Create Membership";
+
+}
+ 
+<h2>Create Membership</h2>
+ 
+@using (Html.BeginForm("CreateMembership", "Library", FormMethod.Post))
+
+{
+
+    @Html.AntiForgeryToken()
+ 
+    <div class="form-horizontal">
+<h4>Membership Details</h4>
+<hr />
+
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+ 
+        <div class="form-group">
+
+            @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+
+                @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control" } })
+
+                @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+</div>
+</div>
+ 
+        <div class="form-group">
+
+            @Html.LabelFor(model => model.Gender, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+
+                @Html.EditorFor(model => model.Gender, new { htmlAttributes = new { @class = "form-control" } })
+
+                @Html.ValidationMessageFor(model => model.Gender, "", new { @class = "text-danger" })
+</div>
+</div>
+ 
+        <div class="form-group">
+
+            @Html.LabelFor(model => model.Contact, htmlAttributes: new { @class = "control-label col-md-2" })
+<div class="col-md-10">
+
+                @Html.EditorFor(model => model.Contact, new { htmlAttributes = new { @class = "form-control" } })
+
+                @Html.ValidationMessageFor(model => model.Contact, "", new { @class = "text-danger" })
+</div>
+</div>
+ 
+        <div class="form-group">
+    @Html.LabelFor(model => model.BranchId, htmlAttributes: new { @class = "control-label col-md-2" })
+    <div class="col-md-10">
+        @Html.DropDownListFor(model => model.BranchId, new SelectList(new List<SelectListItem>
+        {
+            new SelectListItem { Text = "Main Branch", Value = "1" },
+            new SelectListItem { Text = "DownTown Branch", Value = "2" }
+        }), new { @class = "form-control" })
+        @Html.ValidationMessageFor(model => model.BranchId, "", new { @class = "text-danger" })
+    </div>
+</div>
+ 
+        <div class="form-group">
+<div class="col-md-offset-2 col-md-10">
+<input type="submit" value="Create" class="btn btn-default" id="MemberCreationBtn" />
+</div>
+</div>
+</div>
+
+}
+ 
+<h2 id="Message">@ViewBag.Message</h2>
+
+GetBookDetails.cshtml
+@model IEnumerable<LibraryManagementSystem.Models.BookDetails>
+ 
+@{
+
+    ViewBag.Title = "Get Book Details";
+
+}
+ 
+<h2>Get Book Details</h2>
+ 
+<table id="getBooks" class="table">
+<thead>
+<tr>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().Title)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().Author)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().Genre)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().TotalCopies)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().AvailableCopies)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().BranchId)
+</th>
+</tr>
+</thead>
+<tbody>
+
+        @foreach (var item in Model)
+
+        {
+<tr>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.Title)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.Author)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.Genre)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.TotalCopies)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.AvailableCopies)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.BranchId)
+</td>
+</tr>
+
+        }
+</tbody>
+</table>
+
+
+GetBranchDetails.cshtml
+
+@model IEnumerable<LibraryManagementSystem.Models.BranchDetails>
+ 
+@{
+
+    ViewBag.Title = "Get Branch Details";
+
+}
+ 
+<h2>Get Branch Details</h2>
+ 
+<table id="getBranches" class="table">
+<thead>
+<tr>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().BranchName)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().BranchLocation)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().City)
+</th>
+</tr>
+</thead>
+<tbody>
+
+        @foreach (var item in Model)
+
+        {
+<tr>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.BranchName)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.BranchLocation)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.City)
+</td>
+</tr>
+
+        }
+</tbody>
+</table>
+
+GetLibrarianDetails.cshtml
+
+@model IEnumerable<LibraryManagementSystem.Models.Librarian>
+ 
+@{
+
+    ViewBag.Title = "Get Librarian Details";
+
+}
+ 
+<h2>Get Librarian Details</h2>
+ 
+<table id="getLibrarians" class="table">
+<thead>
+<tr>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().Name)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().Gender)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().Experience)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().Contact)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().BranchId)
+</th>
+</tr>
+</thead>
+<tbody>
+
+        @foreach (var item in Model)
+
+        {
+<tr>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.Name)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.Gender)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.Experience)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.Contact)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.BranchId)
+</td>
+</tr>
+
+        }
+</tbody>
+</table>
+
+ GetMembershipDetails.cshtml
+
+@model IEnumerable<LibraryManagementSystem.Models.Members>
+ 
+@{
+
+    ViewBag.Title = "Get Membership Details";
+
+}
+ 
+<h2>Get Membership Details</h2>
+ 
+<table id="getMembers" class="table">
+<thead>
+<tr>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().Name)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().Gender)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().Contact)
+</th>
+<th>
+
+                @Html.DisplayNameFor(model => model.First().BranchId)
+</th>
+</tr>
+</thead>
+<tbody>
+
+        @foreach (var item in Model)
+
+        {
+<tr>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.Name)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.Gender)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.Contact)
+</td>
+<td>
+
+                    @Html.DisplayFor(modelItem => item.BranchId)
+</td>
+</tr>
+
+        }
+</tbody>
+</table>
+
+_Layout.cshtml
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - LibraryManagementSystem</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/LibraryManagementSystem.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">LibraryManagementSystem</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                         
+                        
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2024 - LibraryManagementSystem - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+
